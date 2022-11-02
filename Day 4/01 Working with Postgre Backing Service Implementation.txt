@@ -1,0 +1,243 @@
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++Integration Steps with cloud foundry database
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+1. Create a postgre service instance in btp with name 'mysql'
+2. Add manifest - deployment descriptor for cloud foundry with dependency
+---
+applications:
+- name: APP_NAME
+  path: target/PATH_OF_THE_WAR_FILE.war
+  random-route: true
+  memory: 1024M
+  buildpacks:
+  - sap_java_buildpack
+  services:
+  - mysql
+3. Comment the application.properties for local connection
+4. add new package configuration
+5. Add POM dependencies as below
+
+<dependency>
+			<groupId>org.eclipse.persistence</groupId>
+			<artifactId>org.eclipse.persistence.jpa</artifactId>
+			<version>${org.eclipse.persistence.version}</version>
+		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-cloudfoundry-connector -->
+		<!-- https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-cloudfoundry-connector -->
+		<dependency>
+		    <groupId>org.springframework.cloud</groupId>
+		    <artifactId>spring-cloud-cloudfoundry-connector</artifactId>
+		    <version>2.0.7.RELEASE</version>
+		    <scope>runtime</scope>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-spring-service-connector -->
+		<dependency>
+		    <groupId>org.springframework.cloud</groupId>
+		    <artifactId>spring-cloud-spring-service-connector</artifactId>
+		    <version>2.0.7.RELEASE</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.sap.cloud.db.jdbc/ngdbc -->
+		<dependency>
+		    <groupId>com.sap.cloud.db.jdbc</groupId>
+		    <artifactId>ngdbc</artifactId>
+		    <version>2.7.13</version>
+		</dependency>
+<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-dbcp2 -->
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-dbcp2</artifactId>
+		    <version>2.8.0</version>
+		</dependency>
+
+6. Change the Java version
+
+<properties>
+		<java.version>1.8</java.version>
+		<org.eclipse.persistence.version>2.7.3</org.eclipse.persistence.version>
+	</properties>
+
+5. Create 2 classes
+5.1 DatabaseConfig.java
+
+
+package com.anubhavtrainings.configuration;
+
+import java.util.Arrays;
+import java.util.List;
+
+import javax.persistence.EntityManagerFactory;
+import javax.sql.DataSource;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.config.java.AbstractCloudConfig;
+import org.springframework.cloud.service.relational.DataSourceConfig;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+
+import com.anubhavtrainings.entities.Vendor;
+
+
+//@Profile({"local", "cf-test", "cf-dev","cf-prod"})
+@Configuration
+//@Profile("cloud")
+public class DatabaseConfig extends AbstractCloudConfig {
+	
+
+    /**
+     * (Step 1) Parses the local environment variable VCAP_SERVICES (containing
+     * cloud information) and provides a DataSource. The superclass
+     * {@link AbstractCloudConfig}, part of the Spring Cloud plugin, is used for
+     * this.
+     */
+	//
+	Logger cloudFoundryDataSourceConfigLogger = LoggerFactory.getLogger(this.getClass());
+	
+	@Value("${vcap.services.mysql.credentials.username}")
+	private String username;
+
+	@Value("${vcap.services.mysql.credentials.password}")
+	private String password;
+	
+	@Value("${vcap.services.mysql.credentials.hostname}")
+	private String hostname;
+	
+	@Value("${vcap.services.mysql.credentials.port}")
+	private String port;
+	
+	@Value("${vcap.services.mysql.credentials.dbname}")
+	private String dbname;	
+	
+    @Bean
+    public DataSource dataSource() {
+        /*
+         * Load BasicDbcpPooledDataSourceCreator before
+         * TomcatJdbcPooledDataSourceCreator. Also see the following link for a
+         * detailled discussion of this issue:
+         * https://stackoverflow.com/questions/36885891/jpa-eclipselink-understanding-
+         * classloader-issues
+         */
+        List<String> dataSourceNames = Arrays.asList("BasicDbcpPooledDataSourceCreator",
+                "TomcatJdbcPooledDataSourceCreator", "HikariCpPooledDataSourceCreator",
+                "TomcatDbcpPooledDataSourceCreator");
+        
+        DataSourceConfig dbConfig = new DataSourceConfig(dataSourceNames);
+        DataSource hikariDataSource =  connectionFactory().dataSource(dbConfig);
+        
+        cloudFoundryDataSourceConfigLogger.info("Detected Host name is : " + this.hostname);
+        cloudFoundryDataSourceConfigLogger.info("Detected port name is : " + this.port);
+        cloudFoundryDataSourceConfigLogger.info("Detected DB name is : " + this.dbname);
+        cloudFoundryDataSourceConfigLogger.info("Detected User name is : " + this.username);
+        
+        return hikariDataSource;
+        
+    }
+
+    /**
+     * (Step 2a) Based on a {@link DataSource} (provided using the method above),
+     * provides a factory to create {@link javax.persistence.EntityManager}
+     * instances (a core class of JPA). Also see
+     * {@link EntityManagerFactoryProvider}.
+     */
+    @Bean(name = "entityManagerFactory")
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource) {
+        return EntityManagerFactoryProvider.get(dataSource, Vendor.class.getPackage().getName());
+    }
+//	Above code is commented if required need to be uncommented
+
+    /**
+     * (Step 2b) Based on an {@link EntityManagerFactory} (provided using the method
+     * above), provides a {@link JpaTransactionManager} (another core class of JPA).
+     */
+    @Bean(name = "transactionManager")
+    public JpaTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
+        return new JpaTransactionManager(entityManagerFactory);
+    }
+}
+
+
+
+5.2 EntityManagerFactoryProvider.java
+
+package com.anubhavtrainings.configuration;
+
+import org.eclipse.persistence.jpa.PersistenceProvider;
+import org.springframework.instrument.classloading.SimpleLoadTimeWeaver;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.orm.jpa.vendor.EclipseLinkJpaVendorAdapter;
+
+import javax.sql.DataSource;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.eclipse.persistence.config.PersistenceUnitProperties.*;
+
+/**
+ * This class EntityManagerFactoryProvider provides EntityManager services
+ * 
+ * @author 
+ * @version 1.0
+ * @since 
+ */
+public class EntityManagerFactoryProvider {
+
+	/**
+	 * Based on the given {@link DataSource} instance, create and configure an
+	 * EntityManagerFactory. Part of this configuration is that the given packages
+	 * are scanned for entity classes, so that the created EntityManagers know about
+	 * them.
+	 */
+	public static LocalContainerEntityManagerFactoryBean get(DataSource dataSource, String... packagesToScan) {
+
+		LocalContainerEntityManagerFactoryBean entityManagerFactoryBean = new LocalContainerEntityManagerFactoryBean();
+
+		entityManagerFactoryBean.setPersistenceProvider(new PersistenceProvider());
+		entityManagerFactoryBean.setPackagesToScan(packagesToScan);
+		entityManagerFactoryBean.setDataSource(dataSource);
+
+		// for JPA we use the classloader that Spring uses to avoid classloader issues
+		entityManagerFactoryBean.setJpaPropertyMap(getJPAProperties(dataSource.getClass().getClassLoader()));
+		entityManagerFactoryBean.setLoadTimeWeaver(new SimpleLoadTimeWeaver());
+		entityManagerFactoryBean.setJpaVendorAdapter(new EclipseLinkJpaVendorAdapter());
+
+		entityManagerFactoryBean.afterPropertiesSet();
+
+		return entityManagerFactoryBean;
+	}
+
+	/**
+	 * Set some basic properties. In our case the database schema is created (or
+	 * extended) automatically. Find more properties under
+	 * org.eclipse.persistence.config.PersistenceUnitProperties
+	 */
+	private static Map<String, Object> getJPAProperties(ClassLoader classLoader) {
+		Map<String, Object> properties = new HashMap<>();
+
+		properties.put(DDL_GENERATION, DROP_AND_CREATE);
+		properties.put(DDL_GENERATION_MODE, DDL_DATABASE_GENERATION);
+		properties.put(CLASSLOADER, classLoader);
+		properties.put(LOGGING_LEVEL, "INFO"); // "FINE" provides more details
+
+		// do not cache entities locally, as this causes problems if multiple
+		// application instances are used
+		properties.put(CACHE_SHARED_DEFAULT, "false");
+
+		// You can also tweak your application performance by configuring your database
+		// connection pool.
+		// http://www.eclipse.org/eclipselink/documentation/2.4/jpa/extensions/p_connection_pool.htm
+		properties.put(CONNECTION_POOL_MAX, 50);
+
+		return properties;
+	}
+}
+
+
+6. Build, Login and deploy to CF
+7. Observe the binding of backing service and VCAP service variable
+
