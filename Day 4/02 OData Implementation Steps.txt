@@ -1,0 +1,296 @@
+1. Add olingo Dependencies
+
+<version.olingo>2.0.7</version.olingo>
+		<odata.version>4.7.1</odata.version>
+
+
+<dependency>
+			<groupId>org.apache.olingo</groupId>
+			<artifactId>odata-server-api</artifactId>
+			<version>${odata.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.olingo</groupId>
+			<artifactId>odata-server-core</artifactId>
+			<version>${odata.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.olingo</groupId>
+			<artifactId>olingo-odata2-api</artifactId>
+			<version>${version.olingo}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.eclipse.persistence</groupId>
+					<artifactId>javax.persistence</artifactId>
+				</exclusion>
+			</exclusions>
+
+		</dependency>
+		<dependency>
+			<artifactId>olingo-odata2-api-annotation</artifactId>
+			<groupId>org.apache.olingo</groupId>
+			<type>jar</type>
+			<version>${version.olingo}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.eclipse.persistence</groupId>
+					<artifactId>javax.persistence</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.olingo</groupId>
+			<artifactId>olingo-odata2-core</artifactId>
+			<version>${version.olingo}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.eclipse.persistence</groupId>
+					<artifactId>javax.persistence</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<!-- Apache Olingo Annotation Processor Extension dependencies -->
+		<dependency>
+			<groupId>org.apache.olingo</groupId>
+			<artifactId>olingo-odata2-annotation-processor-api</artifactId>
+			<version>${version.olingo}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.eclipse.persistence</groupId>
+					<artifactId>javax.persistence</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.olingo</groupId>
+			<artifactId>olingo-odata2-annotation-processor-core</artifactId>
+			<version>${version.olingo}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.eclipse.persistence</groupId>
+					<artifactId>javax.persistence</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.olingo</groupId>
+			<artifactId>olingo-odata2-api</artifactId>
+			<version>${version.olingo}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.eclipse.persistence</groupId>
+					<artifactId>javax.persistence</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.apache.olingo</groupId>
+			<artifactId>olingo-odata2-jpa-processor-api</artifactId>
+			<version>${version.olingo}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.eclipse.persistence</groupId>
+					<artifactId>javax.persistence</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.apache.olingo</groupId>
+			<artifactId>olingo-odata2-jpa-processor-core</artifactId>
+			<version>${version.olingo}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.eclipse.persistence</groupId>
+					<artifactId>javax.persistence</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.apache.olingo</groupId>
+			<artifactId>olingo-odata2-jpa-processor-ref</artifactId>
+			<version>${version.olingo}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.eclipse.persistence</groupId>
+					<artifactId>javax.persistence</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.olingo</groupId>
+			<artifactId>olingo-odata2-core</artifactId>
+			<version>${version.olingo}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.eclipse.persistence</groupId>
+					<artifactId>javax.persistence</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+2. BuilderODataServlet.java
+
+
+package com.anubhavtrainings;
+
+import java.io.IOException;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebInitParam;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.olingo.odata2.api.ODataServiceFactory;
+import org.apache.olingo.odata2.core.servlet.ODataServlet;
+import org.springframework.context.ApplicationContext;
+
+import com.anubhavtrainings.util.SpringUtils;
+
+
+
+
+@WebServlet(urlPatterns = { "/anubhav.svc/*" }
+
+, initParams = {
+		@WebInitParam(name = "javax.ws.rs.Application", value = "org.apache.olingo.odata2.core.rest.app.ODataApplication"),
+		@WebInitParam(name = "org.apache.olingo.odata2.service.factory", value = "com.anubhavtrainings.processor.MyODataProcessor") 
+		}
+
+)
+
+public class BuilderODataServlet extends ODataServlet {
+
+	private static final long serialVersionUID = 1L;
+
+	private String oDataServiceFactoryBeanName = "com.anubhavtrainings.processor.MyODataServiceFactory";
+
+	@Override
+	public void init(ServletConfig servletConfig) throws ServletException {
+		super.init(servletConfig);
+	}
+
+	@Override
+	protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		
+		ApplicationContext applicationContext = SpringUtils.getApplicationContext();
+		
+		if (applicationContext == null) {
+			return;
+		}
+		
+		ODataServiceFactory oDataServiceFactory = (ODataServiceFactory)applicationContext.getBean(this.oDataServiceFactoryBeanName);
+		req.setAttribute("org.apache.olingo.odata2.service.factory.instance", oDataServiceFactory);
+		super.service(req, resp);
+	}
+
+	public String getoDataServiceFactoryBeanName() {
+		return oDataServiceFactoryBeanName;
+	}
+
+	public void setoDataServiceFactoryBeanName(String oDataServiceFactoryBeanName) {
+		this.oDataServiceFactoryBeanName = oDataServiceFactoryBeanName;
+	}
+}
+
+3. Create Util packahe and SpringUtils.java
+
+package com.anubhavtrainings.util;
+
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.stereotype.Component;
+
+@Component
+public class SpringUtils implements ApplicationContextAware {
+	private static ApplicationContext applicationContext = null;
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		if (SpringUtils.applicationContext == null) {
+			SpringUtils.applicationContext = applicationContext;
+		}
+	}
+
+	public static ApplicationContext getApplicationContext() {
+		return applicationContext;
+	}
+
+	public static Object getBean(String name) {
+		return getApplicationContext().getBean(name);
+	}
+
+	public static <T> T getBean(Class<T> clazz) {
+		return getApplicationContext().getBean(clazz);
+	}
+
+	public static <T> T getBean(String name, Class<T> clazz) {
+		return getApplicationContext().getBean(name, clazz);
+	}
+
+}
+
+
+4. Replace annotations in Application.class
+
+package com.anubhavtrainings;
+
+import org.apache.olingo.odata2.api.ODataServiceFactory;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.web.servlet.ServletComponentScan;
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.scheduling.annotation.EnableAsync;
+
+import com.anubhavtrainings.annotation.processor.MyODataServiceFactory;
+import com.anubhavtrainings.entities.AddressOdataAgent;
+import com.anubhavtrainings.entities.VendorODataAgent;
+
+@SpringBootApplication(scanBasePackages = "com.anubhavtrainings")
+@EnableJpaRepositories(basePackages = "com.anubhavtrainings")
+@EntityScan(basePackages = "com.anubhavtrainings") 
+@ServletComponentScan(basePackages = "com.anubhavtrainings")
+@EnableAsync
+public class Application {
+
+	public static void main(String[] args) {
+		SpringApplication.run(Application.class, args);
+	}
+	
+	@Bean(name="com.anubhavtrainings.processor.MyODataServiceFactory")
+	public ODataServiceFactory getServiceFactory(){
+		return new MyODataServiceFactory("com.anubhavtrainings");
+	}
+	
+	@Bean(name="com.anubhavtrainings.entities.VendorODataAgent")
+	public VendorODataAgent vendorODataAgent(){
+		return new VendorODataAgent();
+	}
+	
+	@Bean(name="com.anubhavtrainings.entities.addressODataAgent")
+	public AddressOdataAgent addressODataAgent(){
+		return new AddressOdataAgent();
+	}
+
+}
+
+
+5. Create a new package called annotation.processor and add boilerplate class code
+6. Add the OData implementation code for Vendor and Address Agents
+7. Add OData annotaions to entities vendor and address with back and forward relation
+
+
