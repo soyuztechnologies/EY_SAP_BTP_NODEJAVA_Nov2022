@@ -1,5 +1,5 @@
 {
-	"xsappname": "07springodata",
+	"xsappname": "anubhavapp",
 	"tenant-mode": "dedicated",
 	"scopes": [{
 			"name": "$XSAPPNAME.AnubhavDisplay",
