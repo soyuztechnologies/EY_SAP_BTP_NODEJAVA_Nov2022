@@ -24,5 +24,12 @@
 				"$XSAPPNAME.AnubhavEdit"
 			]
 		}
-	]
+	],
+	"oauth2-configuration": {
+		"token-validity": 604800,
+		"refresh-token-validity": 2592000,
+		"redirect-uris": [
+			"https://*.cfapps.us10.hana.ondemand.com/login/callback"
+		]
+	}
 }
