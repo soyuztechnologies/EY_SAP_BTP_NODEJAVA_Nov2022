@@ -1,0 +1,33 @@
+---
+applications:
+- name: anubhavapp
+  path: ./mtdbservice/target/mtdbservice-0.0.1-SNAPSHOT.war
+  routes:
+    - route: https://anubhavapp-slowest-turtle-ab.cfapps.us10-001.hana.ondemand.com
+  memory: 1024M
+  buildpacks:
+  - sap_java_buildpack
+  services:
+  - mysql
+  - myxsuaa
+
+- name: approuter
+  path: ./approuter
+  routes:
+    - route: https://approuter-slowest-turtle-ab.cfapps.us10-001.hana.ondemand.com
+  memory: 128M
+  timeout:  100
+  buildpacks:
+  - nodejs_buildpack
+  services:
+  - myxsuaa
+  env:
+    destinations: >
+      [
+        {
+          "name" : "mtdbservice",
+          "url" : "https://anubhavapp-slowest-turtle-ab.cfapps.us10-001.hana.ondemand.com",
+          "forwardAuthToken" : true,
+          "timeout" : 1200
+        }
+      ]
