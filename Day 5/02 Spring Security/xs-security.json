@@ -29,7 +29,7 @@
 		"token-validity": 604800,
 		"refresh-token-validity": 2592000,
 		"redirect-uris": [
-			"https://*.cfapps.us10.hana.ondemand.com/login/callback"
+			"https://*.cfapps.us10-001.hana.ondemand.com/login/callback"
 		]
 	}
 }
