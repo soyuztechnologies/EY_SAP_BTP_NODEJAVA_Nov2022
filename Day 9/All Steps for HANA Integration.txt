@@ -1,0 +1,30 @@
+1. Added the HANA Driver support
+npm add hdb --save
+2. Build for the HANA specific format of files
+cds build --production 
+(creates hdb files in src>gen)
+3. Change datamodel.cds so the ID can be generated automatically
+entity purchaseorder: cuid, common.Amount {
+            
+            PO_ID: String(24);     	
+            PARTNER_GUID: association to master.businesspartner;                      
+            LIFECYCLE_STATUS: String(1);	
+            OVERALL_STATUS: String(1);
+            NOTE: String(120);
+            Items: Composition of poitems on Items.PARENT_KEY = $self
+
+     }
+
+     entity poitems: cuid, common.Amount {
+                         	
+            PARENT_KEY: association to purchaseorder;
+            PO_ITEM_POS: Integer;	
+            PRODUCT_GUID: association to master.product;           	
+              
+     }
+3. cf login
+4. cds deploy --to hana:mickey
+install hana deployer, create a microsoervice in btp to connect to hana db
+5. Download zip and extract to your computer
+Drag drop them on csv folder
+https://github.com/soyuztechnologies/EY_SAP_BTP_NODEJAVA_Nov2022/blob/master/Day%209/hanacsv.zip
