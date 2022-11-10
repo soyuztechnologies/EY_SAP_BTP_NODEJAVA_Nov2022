@@ -135,6 +135,7 @@ annotate service.PurchaseOrderItems with @(
                 Value : PRODUCT_GUID_NODE_KEY
             },{
                 $Type: 'UI.DataField',
+                Label: 'Product Id',
                 Value : PRODUCT_GUID.PRODUCT_ID
             },{
                 $Type: 'UI.DataField',
@@ -150,6 +151,97 @@ annotate service.PurchaseOrderItems with @(
                 Value : CURRENCY_CODE
             }
 
-        ]
+        ],
+        HeaderInfo: {
+            $Type: 'UI.HeaderInfoType',
+            TypeName: 'Item',
+            TypeNamePlural: 'Order Items',
+            Description: { Value : GROSS_AMOUNT },
+            Title: {Value : PO_ITEM_POS},
+            ImageUrl: 'sap-icon://product'
+        },
+        Facets:[
+            {
+                $Type : 'UI.ReferenceFacet',
+                ID : 'ItemFacet1',
+                Label : 'Item Information',
+                Target : '@UI.FieldGroup#ItemData'
+            },{
+                $Type : 'UI.ReferenceFacet',
+                ID : 'ItemFacet2',
+                Label : 'Product Information',
+                Target : '@UI.FieldGroup#ProductData'
+            }
+        ],
+        FieldGroup#ItemData : {
+            $Type : 'UI.FieldGroupType',
+            Data : [
+                {
+                    $Type : 'UI.DataField',
+                    Label : 'Item Position',
+                    Value : PO_ITEM_POS,
+                },
+                {
+                    $Type : 'UI.DataField',
+                    Label : 'Node Key',
+                    Value : PRODUCT_GUID_NODE_KEY,
+                },
+                {
+                    $Type : 'UI.DataField',
+                    Label : 'Gross Amount',
+                    Value : GROSS_AMOUNT,
+                },
+                {
+                    $Type : 'UI.DataField',
+                    Label : 'Net Amount',
+                    Value : NET_AMOUNT,
+                },
+                {
+                    $Type : 'UI.DataField',
+                    Label : 'Tax Amount',
+                    Value : TAX_AMOUNT,
+                },
+                {
+                    $Type : 'UI.DataField',
+                    Label : 'CURRENCY_CODE',
+                    Value : CURRENCY_CODE,
+                }
+            ]
+        },
+        FieldGroup#ProductData : {
+            $Type : 'UI.FieldGroupType',
+            Data : [
+                {
+                    $Type : 'UI.DataField',
+                    Label : 'Product Id',
+                    Value : PRODUCT_GUID.PRODUCT_ID,
+                },
+                {
+                    $Type : 'UI.DataField',
+                    Label : 'Product Name',
+                    Value : PRODUCT_GUID.DESCRIPTION,
+                },
+                {
+                    $Type : 'UI.DataField',
+                    Label : 'Type Code',
+                    Value : PRODUCT_GUID.TYPE_CODE,
+                },
+                {
+                    $Type : 'UI.DataField',
+                    Label : 'Category',
+                    Value : PRODUCT_GUID.CATEGORY,
+                },
+                {
+                    $Type : 'UI.DataField',
+                    Label : 'Supplier',
+                    Value : PRODUCT_GUID.SUPPLIER_GUID.COMPANY_NAME,
+                },
+                {
+                    $Type : 'UI.DataField',
+                    Label : 'Tax Tarrif',
+                    Value : PRODUCT_GUID.TAX_TARIF_CODE,
+                }
+            ]
+        }
     }
 );
