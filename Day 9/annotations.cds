@@ -20,6 +20,12 @@ annotate service.POs with @(
             Value : PARTNER_GUID.COMPANY_NAME,
         },
         {
+            $Type: 'UI.DataFieldForAction',
+            Label: 'Boost',
+            Action: 'CatalogService.boost',
+            Inline: true
+        },
+        {
             $Type : 'UI.DataField',
             Label : 'Amount',
             Value : GROSS_AMOUNT,
@@ -108,6 +114,42 @@ annotate service.POs with @(
             ID : 'GeneratedFacet1',
             Label : 'General Information',
             Target : '@UI.FieldGroup#Spiderman',
-        },
+        },{
+            $Type : 'UI.ReferenceFacet',
+            ID : 'GeneratedFacet2',
+            Label : '{i18n>POItemDetails}',
+            Target : 'Items/@UI.LineItem',
+        }
     ]
+);
+
+annotate service.PurchaseOrderItems with @(
+    UI: {
+        LineItem: [
+            {
+                $Type: 'UI.DataField',
+                Value : PO_ITEM_POS
+            },
+            {
+                $Type: 'UI.DataField',
+                Value : PRODUCT_GUID_NODE_KEY
+            },{
+                $Type: 'UI.DataField',
+                Value : PRODUCT_GUID.PRODUCT_ID
+            },{
+                $Type: 'UI.DataField',
+                Value : GROSS_AMOUNT
+            },{
+                $Type: 'UI.DataField',
+                Value : NET_AMOUNT
+            },{
+                $Type: 'UI.DataField',
+                Value : TAX_AMOUNT
+            },{
+                $Type: 'UI.DataField',
+                Value : CURRENCY_CODE
+            }
+
+        ]
+    }
 );
