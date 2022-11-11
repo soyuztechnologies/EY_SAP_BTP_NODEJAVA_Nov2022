@@ -1,0 +1,8 @@
+cds build --production
+
+cds deploy --to hana:mickey
+
+**You can go and check the backing service in BTP. in addition, our project gets .cdsrc-private file. which contains
+how to connect to hana and configuration name HYBRID
+
+cds watch --profile hybrid
